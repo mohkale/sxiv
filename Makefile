@@ -1,24 +1,8 @@
-version = 26
+# sxiv - Simple X Image Viewer
+# See LICENSE file cor copyright and license details.
+.POSIX:
 
-srcdir = .
-VPATH = $(srcdir)
-
-PREFIX = /usr/local
-MANPREFIX = $(PREFIX)/share/man
-
-# autoreload backend: inotify/nop
-AUTORELOAD = inotify
-
-# enable features requiring giflib (-lgif)
-HAVE_GIFLIB = 1
-
-# enable features requiring libexif (-lexif)
-HAVE_LIBEXIF = 1
-
-cflags = -std=c99 -Wall -pedantic $(CFLAGS)
-cppflags = -I. $(CPPFLAGS) -D_XOPEN_SOURCE=700 \
-  -DHAVE_GIFLIB=$(HAVE_GIFLIB) -DHAVE_LIBEXIF=$(HAVE_LIBEXIF) \
-  -I/usr/include/freetype2 -I$(PREFIX)/include/freetype2
+include config.mk
 
 lib_exif_0 =
 lib_exif_1 = -lexif
@@ -71,12 +55,15 @@ install: all
 	@echo "INSTALL sxiv.1"
 	mkdir -p $(DESTDIR)$(MANPREFIX)/man1
 	sed "s!PREFIX!$(PREFIX)!g; s!VERSION!$(version)!g" sxiv.1 \
-		>$(DESTDIR)$(MANPREFIX)/man1/sxiv.1
+		> $(DESTDIR)$(MANPREFIX)/man1/sxiv.1
 	chmod 644 $(DESTDIR)$(MANPREFIX)/man1/sxiv.1
 	@echo "INSTALL share/sxiv/"
 	mkdir -p $(DESTDIR)$(PREFIX)/share/sxiv/exec
 	cp exec/* $(DESTDIR)$(PREFIX)/share/sxiv/exec/
 	chmod 755 $(DESTDIR)$(PREFIX)/share/sxiv/exec/*
+	@echo "INSTALL sxiv.desktop"
+	mkdir -p $(DESTDIR)$(DESKPREFIX)
+	cp -f sxiv.desktop $(DESTDIR)$(DESKPREFIX)
 
 uninstall:
 	@echo "REMOVE bin/sxiv"
@@ -85,4 +72,6 @@ uninstall:
 	rm -f $(DESTDIR)$(MANPREFIX)/man1/sxiv.1
 	@echo "REMOVE share/sxiv/"
 	rm -rf $(DESTDIR)$(PREFIX)/share/sxiv
+	@echo "REMOVE sxiv.desktop"
+	rm -f $(DESTDIR)$(DESKPREFIX)/sxiv.desktop
 
