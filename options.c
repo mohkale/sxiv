@@ -18,6 +18,7 @@
 
 #include "sxiv.h"
 #define _IMAGE_CONFIG
+#define _THUMBS_CONFIG
 #include "config.h"
 #include "version.h"
 
@@ -28,11 +29,19 @@
 opt_t _options;
 const opt_t *options = (const opt_t*) &_options;
 
+#define arrlen(arr) (sizeof(arr)) / (sizeof(arr[0]))
+
 void print_usage(void)
 {
 	printf("usage: sxiv [-abcfhiopqrtvZ] [-A FRAMERATE] [-e WID] [-G GAMMA] "
 	       "[-g GEOMETRY] [-N NAME] [-n NUM] [-S DELAY] [-s MODE] [-z ZOOM] "
-	       "FILES...\n");
+           "[-T {");
+    for (int i=0; i < arrlen(thumb_sizes); i++) {
+        if (i != 0)
+            printf(",");
+        printf("%d", thumb_sizes[i]);
+    }
+    printf("}] FILES...\n");
 }
 
 void print_version(void)
@@ -71,8 +80,9 @@ void parse_options(int argc, char **argv)
 	_options.thumb_mode = false;
 	_options.clean_cache = false;
 	_options.private_mode = false;
+    _options.thumb_size = THUMB_SIZE;
 
-	while ((opt = getopt(argc, argv, "A:abce:fG:g:hin:N:opqrS:s:tvZz:")) != -1) {
+	while ((opt = getopt(argc, argv, "A:abce:fG:g:hin:N:opqrS:s:tT:vZz:")) != -1) {
 		switch (opt) {
 			case '?':
 				print_usage();
@@ -152,6 +162,15 @@ void parse_options(int argc, char **argv)
 			case 't':
 				_options.thumb_mode = true;
 				break;
+            case 'T':
+				n = strtol(optarg, &end, 0);
+				if (*end != '\0' || n <= 0)
+					error(EXIT_FAILURE, 0, "Invalid argument for option -T: %s", optarg);
+                // TODO support thumb size not in thumb_sizes.
+                _options.thumb_size = arrpos(n, thumb_sizes, sizeof(thumb_sizes) / sizeof(thumb_sizes[0]));
+                if (_options.thumb_size == -1)
+                    error(EXIT_FAILURE, 0, "Argument not found in thumb sizes: %d", n);
+                break;
 			case 'v':
 				print_version();
 				exit(EXIT_SUCCESS);

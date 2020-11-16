@@ -211,3 +211,10 @@ int r_mkdir(char *path)
 	return 0;
 }
 
+int arrpos(int val, const int* arr, int len) {
+    for (int i=0; i < len; i++) {
+        if (arr[i] == val)
+            return i;
+    }
+    return -1;
+}
