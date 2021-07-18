@@ -41,6 +41,7 @@ typedef struct {
 } timeout_t;
 
 /* timeout handler functions: */
+void autoreload(void);
 void redraw(void);
 void reset_cursor(void);
 void animate(void);
@@ -82,6 +83,7 @@ struct {
 } keyhandler;
 
 timeout_t timeouts[] = {
+	{ { 0, 0 }, false, autoreload   },
 	{ { 0, 0 }, false, redraw       },
 	{ { 0, 0 }, false, reset_cursor },
 	{ { 0, 0 }, false, animate      },
@@ -297,8 +299,10 @@ void load_image(int new)
 		win_set_cursor(&win, CURSOR_WATCH);
 	reset_timeout(slideshow);
 
-	if (new != current)
+	if (new != current) {
 		alternate = current;
+        img.pending_autoreload = false;
+    }
 
 	img_close(&img, false);
 	while (!img_load(&img, &files[new])) {
@@ -395,6 +399,19 @@ int ptr_third_x(void)
 
 	win_cursor_pos(&win, &x, &y);
 	return MAX(0, MIN(2, (x / (win.w * 0.33))));
+}
+
+void autoreload(void)
+{
+	if (img.pending_autoreload) {
+		img_close(&img, true);
+		/* loading an image also resets the autoreload timeout */
+		load_image(fileidx);
+		redraw();
+	} else {
+		/* shouldn't happen */
+		reset_timeout(autoreload);
+	}
 }
 
 void redraw(void)
@@ -681,8 +698,6 @@ void on_buttonpress(XButtonEvent *bev)
 	prefix = 0;
 }
 
-const struct timespec ten_ms = {0, 10000000};
-
 void run(void)
 {
 	int xfd;
@@ -729,10 +744,8 @@ void run(void)
 				if (arl.fd != -1 && FD_ISSET(arl.fd, &fds)) {
 					if (arl_handle(&arl)) {
 						/* when too fast, imlib2 can't load the image */
-						nanosleep(&ten_ms, NULL);
-						img_close(&img, true);
-						load_image(fileidx);
-						redraw();
+						img.pending_autoreload = true;
+						set_timeout(autoreload, TO_AUTORELOAD, true);
 					}
 				}
 			}
