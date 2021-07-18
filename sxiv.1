@@ -22,6 +22,8 @@ sxiv \- Simple X Image Viewer
 .IR MODE ]
 .RB [ \-z
 .IR ZOOM ]
+.RB [ \-T
+.IR THUMB_SIZE ]
 .IR FILE ...
 .SH DESCRIPTION
 sxiv is a simple image viewer for X.
@@ -101,6 +103,9 @@ Set scale mode according to MODE character. Supported modes are: [d]own,
 .TP
 .B \-t
 Start in thumbnail mode.
+.TP
+.BI "\-T " THUMB_SIZE
+Set the initial size of the thumbnails in thumbnail mode to this value.
 .TP
 .B \-v
 Print version information to standard output and exit.

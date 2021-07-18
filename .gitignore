@@ -3,3 +3,4 @@ version.h
 *.d
 *.o
 sxiv
+compile_flags.txt

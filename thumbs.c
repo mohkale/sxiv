@@ -163,7 +163,7 @@ void tns_init(tns_t *tns, fileinfo_t *files, const int *cnt, int *sel,
 	tns->win = win;
 	tns->dirty = false;
 
-	tns->zl = THUMB_SIZE;
+	tns->zl = options->thumb_size;
 	tns_zoom(tns, 0);
 
 	if ((homedir = getenv("XDG_CACHE_HOME")) == NULL || homedir[0] == '\0') {

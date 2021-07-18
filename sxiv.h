@@ -288,6 +288,7 @@ struct opt {
 	bool thumb_mode;
 	bool clean_cache;
 	bool private_mode;
+    int thumb_size;
 };
 
 extern const opt_t *options;
@@ -369,6 +370,7 @@ int r_opendir(r_dir_t*, const char*, bool);
 int r_closedir(r_dir_t*);
 char* r_readdir(r_dir_t*, bool);
 int r_mkdir(char*);
+int arrpos(int, const int*, int);
 
 
 /* window.c */

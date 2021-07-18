@@ -2,11 +2,12 @@
 
 **Simple X Image Viewer**
 
-The sole purpose of sxiv is to be the perfect image viewer for me. It is free
-software so that you can use it and modify it for your needs. Please file a bug
-report if something does not work as documented or expected. Contributions are
-welcome but there is no guarantee that they will be incorporated.
+This repository is my fork of [sxiv][sxiv] from commit [1d2862][upstream].
 
+[sxiv]: https://github.com/muennich/sxiv
+[upstream]: https://github.com/muennich/sxiv/commit/1d28627868f5133a25a0197af21a187799ffa98e
+
+Deviations from the upstream version include:
 
 Features
 --------
