@@ -21,8 +21,6 @@
 #include "config.h"
 
 #include <stdlib.h>
-#include <ctype.h>
-#include <libgen.h>
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -803,35 +801,6 @@ int fncmp(const void *a, const void *b)
 	return strcoll(((fileinfo_t*) a)->name, ((fileinfo_t*) b)->name);
 }
 
-#ifdef NATURAL_SORT
-int natural_fncmp(const void *a, const void *b) {
-    const char *s1 = ((fileinfo_t*) a)->name;
-    const char *s2 = ((fileinfo_t*) b)->name;
-    for (;;) {
-        if (*s2 == '\0')
-            return *s1 != '\0';
-        else if (*s1 == '\0')
-            return 1;
-        else if (!(isdigit(*s1) && isdigit(*s2))) {
-            if (*s1 != *s2)
-                return (int)*s1 - (int)*s2;
-            else
-                (++s1, ++s2);
-        } else {
-            char *lim1, *lim2;
-            unsigned long n1 = strtoul(s1, &lim1, 10);
-            unsigned long n2 = strtoul(s2, &lim2, 10);
-            if (n1 > n2)
-                return 1;
-            else if (n1 < n2)
-                return -1;
-            s1 = lim1;
-            s2 = lim2;
-        }
-    }
-}
-#endif
-
 void sigchld(int sig)
 {
 	while (waitpid(-1, NULL, WNOHANG) > 0);
@@ -848,43 +817,15 @@ void setup_signal(int sig, void (*handler)(int sig))
 		error(EXIT_FAILURE, errno, "signal %d", sig);
 }
 
-int add_files_from_dir(char *directory, char* exclude_filename, bool recursive)
-{
-    r_dir_t dir;
-    if (r_opendir(&dir, directory, recursive) < 0) {
-        error(0, errno, "%s", directory);
-        return 1;
-    }
-    int start = fileidx;
-    char *filename;
-    while ((filename = r_readdir(&dir, true)) != NULL) {
-        if (strcmp(filename, exclude_filename) != 0) {
-            check_add_file(filename, false);
-        }
-        free((void*)filename);
-    }
-    r_closedir(&dir);
-    if (fileidx - start > 1)
-        qsort(files+start,
-              fileidx - start,
-              sizeof(fileinfo_t),
-#ifdef NATURAL_SORT
-              natural_fncmp
-#else
-              fncmp
-#endif
-        );
-    return 0;
-}
-
 int main(int argc, char **argv)
 {
-	int i;
+	int i, start;
 	size_t n;
 	ssize_t len;
 	char *filename;
 	const char *homedir, *dsuffix = "";
 	struct stat fstats;
+	r_dir_t dir;
 
 	setup_signal(SIGCHLD, sigchld);
 	setup_signal(SIGPIPE, SIG_IGN);
@@ -933,15 +874,19 @@ int main(int argc, char **argv)
 		}
 		if (!S_ISDIR(fstats.st_mode)) {
 			check_add_file(filename, true);
-            char *_filename = strdup(filename);
-            char *filedir = strdup(filename);
-            filedir = dirname(filedir);
-            if (!add_files_from_dir(filedir, _filename, options->recursive))
-                continue;
 		} else {
-			if (!add_files_from_dir(filename, "", options->recursive)) {
+			if (r_opendir(&dir, filename, options->recursive) < 0) {
+				error(0, errno, "%s", filename);
 				continue;
 			}
+			start = fileidx;
+			while ((filename = r_readdir(&dir, true)) != NULL) {
+				check_add_file(filename, false);
+				free((void*) filename);
+			}
+			r_closedir(&dir);
+			if (fileidx - start > 1)
+				qsort(files + start, fileidx - start, sizeof(fileinfo_t), fncmp);
 		}
 	}
 
