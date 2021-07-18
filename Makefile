@@ -33,6 +33,9 @@ window.o: icon/data.h
 	@echo "CC $@"
 	$(CC) $(cflags) $(cppflags) -c -o $@ $<
 
+compile_flags.txt:
+	printf "%s\n" $(cflags) $(cppflags) > $@
+
 config.h:
 	@echo "GEN $@"
 	cp $(srcdir)/config.def.h $@
